@@ -58,7 +58,7 @@ def message_reply(message):
         bot.send_message(message.chat.id,predict[4])
     elif message.text == "Переобучение модели":
         bot.send_message(message.chat.id, 'Подождите, мы переобучаем модель!')
-        ModelCreate.create_model('ROSN.me')
+        ModelCreate.create_model()
         bot.send_message(message.chat.id, 'Модель готова к использованию!')
     else:
         bot.send_message(message.chat.id,'Неизвестная команда!')

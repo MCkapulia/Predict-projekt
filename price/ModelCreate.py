@@ -14,16 +14,13 @@ from tensorflow.keras.models import Sequential
 from price import tinkoffPrice
 from keras.models import load_model
 
-START = "2006-05-01"
-TODAY = date.today().strftime("%Y-%m-%d")
-
-def load_Data(ticker):
-    data = yf.download(ticker, START, TODAY)
+def load_Data():
+    data = tinkoffPrice.candles()
     data.reset_index(inplace=True)
     return data
 
-def train_test_Data(ticker):
-    data = load_Data(ticker)
+def train_test_Data():
+    data = load_Data()
     train = pd.DataFrame(data[0:int(len(data) * 0.70)])
     test = pd.DataFrame(data[int(len(data) * 0.70): int(len(data))])
     train.head()
@@ -33,11 +30,6 @@ def train_test_Data(ticker):
     scaler = MinMaxScaler(feature_range=(0, 1))
     data_training_array = scaler.fit_transform(train_close)
     return data_training_array
-
-def normalize_Data(data):
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    norm_data = scaler.fit_transform(data)
-    return norm_data
 
 def conversion_Data(data):
     x_train = []
@@ -49,17 +41,18 @@ def conversion_Data(data):
     x_train, y_train = np.array(x_train), np.array(y_train)
     return x_train, y_train
 
-def create_model(ticker):
-    data = train_test_Data(ticker)
+def create_model():
+    data = train_test_Data()
     x_train, y_train = conversion_Data(data)
     model = Sequential()
-    model.add(LSTM(100,
+    model.add(LSTM(200, activation='tanh',
                    return_sequences=True,
                    input_shape=(x_train.shape[1], 1)))
-    model.add(LSTM(100,
-                   return_sequences=False))
-    model.add(Dense(50, activation='linear'))
-
+    model.add(Dropout(0.2))
+    model.add(LSTM(100, activation='tanh', return_sequences=True))
+    model.add(Dropout(0.1))
+    model.add(LSTM(60, activation='tanh'))
+    model.add(Dropout(0.1))
     model.add(Dense(1))
     model.summary()
     model.compile(optimizer='adam', loss='mean_absolute_error', metrics=[tf.keras.metrics.MeanAbsoluteError()])
@@ -68,9 +61,9 @@ def create_model(ticker):
 
 def predict_1day():
     scaler = MinMaxScaler(feature_range=(0, 1))
-    tinkoffPrice.run()
+    tinkoffPrice.candles()
     xl = pd.read_excel("data.xlsx")
-    xl = xl[['close']]
+    xl = xl[['close']].tail(100)
     window_size = 100
     test_df = xl.values
     data_our_array = scaler.fit_transform(test_df)
@@ -84,9 +77,9 @@ def predict_1day():
 def predict_2day():
     predict_1 = [predict_1day()]
     scaler = MinMaxScaler(feature_range=(0, 1))
-    tinkoffPrice.run()
+    tinkoffPrice.candles()
     xl = pd.read_excel("data.xlsx")
-    xl = xl[['close']]
+    xl = xl[['close']].tail(100)
     window_size = 100
     test_df = xl.values
     test_df = delete_element(test_df, predict_1[0])
@@ -111,9 +104,9 @@ def delete_element(test_df, predict):
 def predict_3day():
     predict_2 = predict_2day()
     scaler = MinMaxScaler(feature_range=(0, 1))
-    tinkoffPrice.run()
+    tinkoffPrice.candles()
     xl = pd.read_excel("data.xlsx")
-    xl = xl[['close']]
+    xl = xl[['close']].tail(100)
     window_size = 100
     test_df = xl.values
     test_df = delete_element(test_df, predict_2[0])
@@ -130,9 +123,9 @@ def predict_3day():
 def predict_4day():
     predict_3 = predict_3day()
     scaler = MinMaxScaler(feature_range=(0, 1))
-    tinkoffPrice.run()
+    tinkoffPrice.candles()
     xl = pd.read_excel("data.xlsx")
-    xl = xl[['close']]
+    xl = xl[['close']].tail(100)
     window_size = 100
     test_df = xl.values
     test_df = delete_element(test_df, predict_3[0])
@@ -149,9 +142,9 @@ def predict_4day():
 def predict_5day():
     predict_4 = predict_4day()
     scaler = MinMaxScaler(feature_range=(0, 1))
-    tinkoffPrice.run()
+    tinkoffPrice.candles()
     xl = pd.read_excel("data.xlsx")
-    xl = xl[['close']]
+    xl = xl[['close']].tail(100)
     window_size = 100
     test_df = xl.values
     test_df = delete_element(test_df, predict_4[0])
