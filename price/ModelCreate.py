@@ -53,14 +53,14 @@ def create_model(ticker):
     data = train_test_Data(ticker)
     x_train, y_train = conversion_Data(data)
     model = Sequential()
-    model.add(LSTM(units=100, activation='tanh', return_sequences=True
-                   , input_shape=(x_train.shape[1], 1)))
-    model.add(Dropout(0.1))
+    model.add(LSTM(100,
+                   return_sequences=True,
+                   input_shape=(x_train.shape[1], 1)))
+    model.add(LSTM(100,
+                   return_sequences=False))
+    model.add(Dense(50, activation='linear'))
 
-    model.add(LSTM(units=200, activation='tanh'))
-    model.add(Dropout(0.2))
-
-    model.add(Dense(units=1))
+    model.add(Dense(1))
     model.summary()
     model.compile(optimizer='adam', loss='mean_absolute_error', metrics=[tf.keras.metrics.MeanAbsoluteError()])
     model.fit(x_train, y_train, epochs=20)
